@@ -91,6 +91,10 @@ app.get("/test",(req,res)=>{
     res.send("Alexa test Server")
 });
 
+app.get("/",(req,res)=>{
+  res.send("Express Server form Alexa")
+})
+
 app.listen(PORT, () => {
   console.log(`Server is upon running on port ${PORT}`);
 });
