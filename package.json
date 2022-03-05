@@ -1,0 +1,22 @@
+{
+  "name": "hotel-booking-alexa-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.mjs",
+    "dev": "nodemon index.mjs",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "ask-sdk-core": "^2.12.0",
+    "ask-sdk-express-adapter": "^2.12.0",
+    "axios": "^0.26.0",
+    "cors": "^2.8.5",
+    "express": "^4.17.3",
+    "morgan": "^1.10.0"
+  }
+}
