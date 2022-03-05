@@ -7,6 +7,7 @@ import express from "express";
 
 const app = express();
 const PORT = process.env.PORT || 8000;
+app.use(morgan("dev"));
 
 const LaunchRequestHandler = {
   canHandle(handlerInput) {
@@ -84,7 +85,7 @@ const adapter = new ExpressAdapter(skill, false, false);
 app.post("/api/v1/webhook-alexa", adapter.getRequestHandlers());
 
 app.use(express.json());
-app.use(express.cors());
+app.use(cors());
 
 app.get("/test",(req,res)=>{
     res.send("Alexa test Server")
