@@ -37,7 +37,7 @@ const bookRoomIntentHandler = {
     const slots = handlerInput.requestEnvelope.request.intent.slots;
 
     const numberOfPeoples = slots.NumberOfPeople;
-    console.log("NumberOfPeople " + NumberOfPeople);
+    console.log("NumberOfPeople " + numberOfPeoples);
 
     const roomType = slots.roomType;
     console.log("roomType " + roomType);
@@ -82,6 +82,7 @@ const SkillBuilder = SkillBuilders.custom()
 const skill = SkillBuilder.create();
 const adapter = new ExpressAdapter(skill, false, false);
 
+// https://hotel-booking-alexa-api.herokuapp.com/
 app.post("/api/v1/webhook-alexa", adapter.getRequestHandlers());
 
 app.use(express.json());
