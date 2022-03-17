@@ -6,7 +6,7 @@ import cors from "cors";
 import express from "express";
 
 const app = express();
-const PORT = process.env.PORT || 8000;
+const PORT = process.env.PORT || 5000;
 app.use(morgan("dev"));
 
 const LaunchRequestHandler = {
@@ -17,7 +17,7 @@ const LaunchRequestHandler = {
   },
   handle(handlerInput) {
     const speakOutput =
-      "Welcome, you can say Hello or Help. Which would you like to try? . This is Express Server";
+      "Hello and Welcome, I am a hotel booking virtual assistant. How can help you?. If you can book a room. so please ask. I want to book a room";
 
     return handlerInput.responseBuilder
       .speak(speakOutput)
@@ -75,11 +75,10 @@ const ErrorHandler = {
   },
 };
 
-const SkillBuilder = SkillBuilders.custom()
-  .addErrorHandlers(LaunchRequestHandler, bookRoomIntentHandler)
+const skillBuilder = SkillBuilders.custom()
+  .addRequestHandlers(LaunchRequestHandler, bookRoomIntentHandler)
   .addErrorHandlers(ErrorHandler);
-
-const skill = SkillBuilder.create();
+const skill = skillBuilder.create();
 const adapter = new ExpressAdapter(skill, false, false);
 
 // https://hotel-booking-alexa-api.herokuapp.com/
@@ -88,13 +87,13 @@ app.post("/api/v1/webhook-alexa", adapter.getRequestHandlers());
 app.use(express.json());
 app.use(cors());
 
-app.get("/test",(req,res)=>{
-    res.send("Alexa test Server")
+app.get("/test", (req, res) => {
+  res.send("Alexa test Server");
 });
 
-app.get("/",(req,res)=>{
-  res.send("Express Server form Alexa")
-})
+app.get("/", (req, res) => {
+  res.send("Express Server form Alexa");
+});
 
 app.listen(PORT, () => {
   console.log(`Server is upon running on port ${PORT}`);
