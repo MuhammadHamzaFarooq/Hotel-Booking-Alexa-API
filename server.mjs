@@ -1,13 +1,37 @@
 import Alexa, { SkillBuilders } from "ask-sdk-core";
 import { ExpressAdapter } from "ask-sdk-express-adapter";
+import express from "express";
+import mongoose from "mongoose";
 import morgan from "morgan";
+import moment from "moment";
 import axios from "axios";
 import cors from "cors";
-import express from "express";
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 6000;
+const localURL = `mongodb://localhost:27017/alexa-hotel-booking-db`;
+
 app.use(morgan("dev"));
+
+// db Connections
+mongoose
+  .connect(localURL)
+  .then(() => {
+    console.log(`Database is successfully conntect`);
+  })
+  .catch((e) => {
+    console.log(`Database is not conntected : ${e}`);
+  });
+
+const bookingSchema = new mongoose.Schema({
+  NumberOfPeople: String,
+  roomType: String,
+  duration: Number,
+  arrivalDate: String,
+  createdOn: { type: Date, default: Date.now },
+});
+
+const bookingModel = new mongoose.model("bookingModel", bookingSchema);
 
 const LaunchRequestHandler = {
   canHandle(handlerInput) {
@@ -16,8 +40,20 @@ const LaunchRequestHandler = {
     );
   },
   handle(handlerInput) {
-    const speakOutput =
-      "Hello and Welcome, I am a hotel booking virtual assistant. How can help you?. If you can book a room. so please ask. I want to book a room";
+    const speakOutput = `
+                <speak>
+                    <voice name="Justin">
+                        <amazon:emotion name="excited" intensity="high">
+                        <s>Hello And Welcome</s>
+                        <s>I am hotel booking virtual assistant</s>
+                        <s>So how can help you</s>
+                        <s>If you want to book a room</s>
+                        <s>So ask me</s>
+                        <s>I want to book a room</s>
+                        </amazon:emotion>
+                    </voice>
+               </speak>
+                       `;
 
     return handlerInput.responseBuilder
       .speak(speakOutput)
@@ -33,22 +69,43 @@ const bookRoomIntentHandler = {
       Alexa.getIntentName(handlerInput.requestEnvelope) === "bookRoom"
     );
   },
-  handle(handlerInput) {
+  async handle(handlerInput) {
     const slots = handlerInput.requestEnvelope.request.intent.slots;
+    console.log(slots);
 
-    const numberOfPeoples = slots.NumberOfPeople;
-    console.log("NumberOfPeople " + numberOfPeoples);
+    const NumberOfPeople = slots.NumberOfPeople;
+    console.log("NumberOfPeople " + NumberOfPeople.value);
 
     const roomType = slots.roomType;
-    console.log("roomType " + roomType);
+    console.log("roomType " + roomType.value);
 
     const duration = slots.duration;
-    console.log("duration " + duration);
+    console.log("duration " + duration.value);
 
     const arrivalDate = slots.arrivalDate;
-    console.log(" arrivalDate " + arrivalDate);
+    console.log(" arrivalDate " + arrivalDate.value);
 
-    const speakOutput = "your hotel room booking is completed";
+    let standard = ["ORDINARY","REGULAR","STANDARD","standard","regular","ordinary","normal"];
+    let vip = ["HIGHI CLASS","BEST","PERMIUM","VIP","vip","premium","best","high class","luxury"];
+    let economy = ["cheapest","CHEAP","BASIC","ECONOMY","economy","basic" ,"low budget" ,"lowcheap"];
+
+    try {
+      let saveDocument = await bookingModel.create({
+        NumberOfPeople: NumberOfPeople.value,
+        roomType: roomType.value,
+        duration: duration.value,
+        arrivalDate: arrivalDate.value,
+      });
+
+      if (!saveDocument) {
+        console.log("Document Save in db successfull");
+      } else {
+        console.log("Document not Save in db");
+      }
+    } catch (error) {
+      console.log("Something went wrong for saving documents in db : ", error);
+    }
+    const speakOutput = `${roomType.value} room for ${NumberOfPeople.value} person. You can stay for ${duration.value} days and you will comming on ${arrivalDate.value}. So your hotel booking is completed`;
 
     return (
       handlerInput.responseBuilder
@@ -75,24 +132,21 @@ const ErrorHandler = {
   },
 };
 
-const skillBuilder = SkillBuilders.custom()
+let skillBuilder = SkillBuilders.custom()
   .addRequestHandlers(LaunchRequestHandler, bookRoomIntentHandler)
   .addErrorHandlers(ErrorHandler);
-const skill = skillBuilder.create();
-const adapter = new ExpressAdapter(skill, false, false);
 
-// https://hotel-booking-alexa-api.herokuapp.com/
-app.post("/api/v1/webhook-alexa", adapter.getRequestHandlers());
+let skill = skillBuilder.create();
+
+let adapter = new ExpressAdapter(skill, false, false);
+
+app.post("/api/v1/alexa-webhook", adapter.getRequestHandlers());
 
 app.use(express.json());
 app.use(cors());
 
-app.get("/test", (req, res) => {
-  res.send("Alexa test Server");
-});
-
-app.get("/", (req, res) => {
-  res.send("Express Server form Alexa");
+app.get("/alexa", (req, res) => {
+  res.send("Welcome in alexa hotel booking app");
 });
 
 app.listen(PORT, () => {
